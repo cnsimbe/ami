@@ -5,6 +5,8 @@ let DicomParser = require('dicom-parser');
 let Jpeg = require('jpeg-lossless-decoder-js');
 let JpegBaseline = require('../../external/scripts/jpeg');
 let Jpx = require('../../external/scripts/jpx');
+let PaletteColor = require('../../external/scripts/palette_color');
+let Rle = require('rle-dicom');
 
 /**
  * Dicom parser is a combination of utilities to get a VJS image from dicom files.
@@ -30,8 +32,17 @@ export default class ParsersDicom extends ParsersVolume {
     // throw error if any!
     this._dataSet = null;
 
+    //PALETTE COLOR TABLE Descriptors
+    this.palette_color_tables = {
+      redPaletteColorLookupTableDescriptor:null,
+      greenPaletteColorLookupTableDescriptor:null,
+      bluePaletteColorLookupTableDescriptor:null
+    }
+
     try {
       this._dataSet = DicomParser.parseDicom(byteArray);
+      if(this.photometricInterpretation()=='PALETTE COLOR')
+        PaletteColor.populatePaletteColorLut(this._dataSet,this.palette_color_tables)
     } catch (e) {
       window.console.log(e);
       const error = new Error('parsers.dicom could not parse the file');
@@ -738,6 +749,9 @@ export default class ParsersDicom extends ParsersVolume {
       transferSyntaxUID === '1.2.840.10008.1.2.4.91') {
       // JPEG 2000 Lossy
       return this._decodeJ2K(frameIndex);
+    } else if (transferSyntaxUID === '1.2.840.10008.1.2.5') {
+      // JPEG 2000 Lossy
+      return this._decodeRLELossless(frameIndex);
     } else if (
       transferSyntaxUID === '1.2.840.10008.1.2.4.57' ||
       // JPEG Lossless, Nonhierarchical (Processes 14)
@@ -832,6 +846,31 @@ export default class ParsersDicom extends ParsersVolume {
     let byteOutput = bitsAllocated <= 8 ? 1 : 2;
     let decoder = new Jpeg.lossless.Decoder();
     let decompressedData = decoder.decode(encodedPixelData.buffer, encodedPixelData.byteOffset, encodedPixelData.length, byteOutput);
+
+    if (pixelRepresentation === 0) {
+      if (byteOutput === 2) {
+        return new Uint16Array(decompressedData.buffer);
+      } else {
+        // untested!
+        return new Uint8Array(decompressedData.buffer);
+      }
+    } else {
+      return new Int16Array(decompressedData.buffer);
+    }
+  }
+
+
+  // from cnsimbe
+  _decodeRLELossless(frameIndex = 0) {
+    let encodedPixelData = this.getEncapsulatedImageFrame(frameIndex);
+    let pixelRepresentation = this.pixelRepresentation(frameIndex);
+    let bitsAllocated = this.bitsAllocated(frameIndex);
+    let rows = this.rows(frameIndex)
+    let columns = this.columns(frameIndex)
+    let samplesPerPixel = this.samplesPerPixel()
+    let byteOutput = bitsAllocated <= 8 ? 1 : 2;
+    let decoder = new Rle();
+    let decompressedData = decoder.decodeFrame(encodedPixelData, rows, columns, samplesPerPixel, bitsAllocated);
 
     if (pixelRepresentation === 0) {
       if (byteOutput === 2) {
@@ -1020,6 +1059,21 @@ export default class ParsersDicom extends ParsersVolume {
         rgbData[rgbaIndex++] = y + 1.77200 * (cb - 128); // blue
         // rgbData[rgbaIndex++] = 255; //alpha
       }
+    } else if (photometricInterpretation === 'PALETTE COLOR') {
+      if (uncompressedData instanceof Int8Array) {
+        rgbData = new Int8Array(uncompressedData.length*3);
+      } else if (uncompressedData instanceof Uint8Array) {
+        rgbData = new Uint8Array(uncompressedData.length*3);
+      } else if (uncompressedData instanceof Int16Array) {
+        rgbData = new Int16Array(uncompressedData.length*3);
+      } else if (uncompressedData instanceof Uint16Array) {
+        rgbData = new Uint16Array(uncompressedData.length*3);
+      } else {
+        const error = new Error(`unsuported typed array: ${uncompressedData}`);
+        throw error;
+      }
+        PaletteColor.palette_color_to_rgb(uncompressedData, this.rows(), this.columns(), this.palette_color_tables,rgbData)
+      
     } else {
       const error = new Error(`photometric interpolation not supported: ${photometricInterpretation}`);
       throw error;

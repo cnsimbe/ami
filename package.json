@@ -42,6 +42,7 @@
         "nifti-reader-js": "v0.5.3",
         "nrrd-js": "^0.2.1",
         "pako": "1.0.1",
+        "rle-dicom": "https://github.com/cnsimbe/rle-dicom",
         "three": "0.92.0"
     },
     "scripts": {

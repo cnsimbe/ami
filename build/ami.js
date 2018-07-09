@@ -53694,6 +53694,11 @@ var ShadersUniform = function () {
         type: 'f',
         value: 10.,
         typeGLSL: 'float'
+      },
+      'uOpacity': {
+        type: 'f',
+        value: 1.0,
+        typeGLSL: 'float'
       }
     };
   };
@@ -53776,7 +53781,7 @@ var ShadersFragment = function () {
 
   ShadersFragment.prototype.main = function main() {
     // need to pre-call main to fill up the functions list
-    this._main = '\nvoid main(void) {\n\n  // draw border if slice is cropped\n  // float uBorderDashLength = 10.;\n\n  if( uCanvasWidth > 0. &&\n      ((gl_FragCoord.x > uBorderMargin && (gl_FragCoord.x - uBorderMargin) < uBorderWidth) ||\n       (gl_FragCoord.x < (uCanvasWidth - uBorderMargin) && (gl_FragCoord.x + uBorderMargin) > (uCanvasWidth - uBorderWidth) ))){\n    float valueY = mod(gl_FragCoord.y, 2. * uBorderDashLength);\n    if( valueY < uBorderDashLength && gl_FragCoord.y > uBorderMargin && gl_FragCoord.y < (uCanvasHeight - uBorderMargin) ){\n      gl_FragColor = vec4(uBorderColor, 1.);\n      return;\n    }\n  }\n\n  if( uCanvasHeight > 0. &&\n      ((gl_FragCoord.y > uBorderMargin && (gl_FragCoord.y - uBorderMargin) < uBorderWidth) ||\n       (gl_FragCoord.y < (uCanvasHeight - uBorderMargin) && (gl_FragCoord.y + uBorderMargin) > (uCanvasHeight - uBorderWidth) ))){\n    float valueX = mod(gl_FragCoord.x, 2. * uBorderDashLength);\n    if( valueX < uBorderDashLength && gl_FragCoord.x > uBorderMargin && gl_FragCoord.x < (uCanvasWidth - uBorderMargin) ){\n      gl_FragColor = vec4(uBorderColor, 1.);\n      return;\n    }\n  }\n\n  // get texture coordinates of current pixel\n  vec4 dataCoordinates = uWorldToData * vPos;\n  vec3 currentVoxel = dataCoordinates.xyz;\n  vec4 dataValue = vec4(0., 0., 0., 0.);\n  vec3 gradient = vec3(0., 0., 0.);\n  ' + Object(__WEBPACK_IMPORTED_MODULE_0__interpolation_shaders_interpolation__["a" /* default */])(this, 'currentVoxel', 'dataValue', 'gradient') + '\n\n  if(uNumberOfChannels == 1){\n    // rescale/slope\n    float realIntensity = dataValue.r * uRescaleSlopeIntercept[0] + uRescaleSlopeIntercept[1];\n  \n    // threshold\n    if (realIntensity < uLowerUpperThreshold[0] || realIntensity > uLowerUpperThreshold[1]) {\n      discard;\n    }\n  \n    // normalize\n    float windowMin = uWindowCenterWidth[0] - uWindowCenterWidth[1] * 0.5;\n    float normalizedIntensity =\n      ( realIntensity - windowMin ) / uWindowCenterWidth[1];\n    dataValue.r = dataValue.g = dataValue.b = normalizedIntensity;\n    dataValue.a = 1.;\n\n    // apply LUT\n    if(uLut == 1){\n      // should opacity be grabbed there?\n      dataValue = texture2D( uTextureLUT, vec2( normalizedIntensity , 1.0) );\n    }\n  \n    // apply segmentation\n    if(uLutSegmentation == 1){\n      // should opacity be grabbed there?\n      //\n      float textureWidth = 256.;\n      float textureHeight = 128.;\n      float min = 0.;\n      // start at 0!\n      int adjustedIntensity = int(floor(realIntensity + 0.5));\n  \n      // Get row and column in the texture\n      int colIndex = int(mod(float(adjustedIntensity), textureWidth));\n      int rowIndex = int(floor(float(adjustedIntensity)/textureWidth));\n  \n      float texWidth = 1./textureWidth;\n      float texHeight = 1./textureHeight;\n    \n      // Map row and column to uv\n      vec2 uv = vec2(0,0);\n      uv.x = 0.5 * texWidth + (texWidth * float(colIndex));\n      uv.y = 1. - (0.5 * texHeight + float(rowIndex) * texHeight);\n  \n      dataValue = texture2D( uTextureLUTSegmentation, uv );\n    }\n  }\n\n  if(uInvert == 1){\n    dataValue = vec4(1.) - dataValue;\n    // how do we deal with that and opacity?\n    dataValue.a = 1.;\n  }\n\n  gl_FragColor = dataValue;\n}\n   ';
+    this._main = '\nvoid main(void) {\n\n  // draw border if slice is cropped\n  // float uBorderDashLength = 10.;\n\n  if( uCanvasWidth > 0. &&\n      ((gl_FragCoord.x > uBorderMargin && (gl_FragCoord.x - uBorderMargin) < uBorderWidth) ||\n       (gl_FragCoord.x < (uCanvasWidth - uBorderMargin) && (gl_FragCoord.x + uBorderMargin) > (uCanvasWidth - uBorderWidth) ))){\n    float valueY = mod(gl_FragCoord.y, 2. * uBorderDashLength);\n    if( valueY < uBorderDashLength && gl_FragCoord.y > uBorderMargin && gl_FragCoord.y < (uCanvasHeight - uBorderMargin) ){\n      gl_FragColor = vec4(uBorderColor, 1.);\n      return;\n    }\n  }\n\n  if( uCanvasHeight > 0. &&\n      ((gl_FragCoord.y > uBorderMargin && (gl_FragCoord.y - uBorderMargin) < uBorderWidth) ||\n       (gl_FragCoord.y < (uCanvasHeight - uBorderMargin) && (gl_FragCoord.y + uBorderMargin) > (uCanvasHeight - uBorderWidth) ))){\n    float valueX = mod(gl_FragCoord.x, 2. * uBorderDashLength);\n    if( valueX < uBorderDashLength && gl_FragCoord.x > uBorderMargin && gl_FragCoord.x < (uCanvasWidth - uBorderMargin) ){\n      gl_FragColor = vec4(uBorderColor, 1.);\n      return;\n    }\n  }\n\n  // get texture coordinates of current pixel\n  vec4 dataCoordinates = uWorldToData * vPos;\n  vec3 currentVoxel = dataCoordinates.xyz;\n  vec4 dataValue = vec4(0., 0., 0., 0.);\n  vec3 gradient = vec3(0., 0., 0.);\n  ' + Object(__WEBPACK_IMPORTED_MODULE_0__interpolation_shaders_interpolation__["a" /* default */])(this, 'currentVoxel', 'dataValue', 'gradient') + '\n\n  if(uNumberOfChannels == 1){\n    // rescale/slope\n    float realIntensity = dataValue.r * uRescaleSlopeIntercept[0] + uRescaleSlopeIntercept[1];\n  \n    // threshold\n    if (realIntensity < uLowerUpperThreshold[0] || realIntensity > uLowerUpperThreshold[1]) {\n      discard;\n    }\n  \n    // normalize\n    float windowMin = uWindowCenterWidth[0] - uWindowCenterWidth[1] * 0.5;\n    float normalizedIntensity =\n      ( realIntensity - windowMin ) / uWindowCenterWidth[1];\n    dataValue.r = dataValue.g = dataValue.b = normalizedIntensity;\n    dataValue.a = 1.;\n\n    // apply LUT\n    if(uLut == 1){\n      // should opacity be grabbed there?\n      dataValue = texture2D( uTextureLUT, vec2( normalizedIntensity , 1.0) );\n    }\n  \n    // apply segmentation\n    if(uLutSegmentation == 1){\n      // should opacity be grabbed there?\n      //\n      float textureWidth = 256.;\n      float textureHeight = 128.;\n      float min = 0.;\n      // start at 0!\n      int adjustedIntensity = int(floor(realIntensity + 0.5));\n  \n      // Get row and column in the texture\n      int colIndex = int(mod(float(adjustedIntensity), textureWidth));\n      int rowIndex = int(floor(float(adjustedIntensity)/textureWidth));\n  \n      float texWidth = 1./textureWidth;\n      float texHeight = 1./textureHeight;\n    \n      // Map row and column to uv\n      vec2 uv = vec2(0,0);\n      uv.x = 0.5 * texWidth + (texWidth * float(colIndex));\n      uv.y = 1. - (0.5 * texHeight + float(rowIndex) * texHeight);\n  \n      dataValue = texture2D( uTextureLUTSegmentation, uv );\n    }\n  }\n\n  if(uInvert == 1){\n    dataValue.xyz = vec3(1.) - dataValue.xyz;\n  }\n\n  dataValue.a = dataValue.a*uOpacity;\n\n  gl_FragColor = dataValue;\n}\n   ';
   };
 
   ShadersFragment.prototype.compute = function compute() {
@@ -56869,6 +56874,8 @@ var DicomParser = __webpack_require__(133);
 var Jpeg = __webpack_require__(157);
 var JpegBaseline = __webpack_require__(159);
 var Jpx = __webpack_require__(160);
+var PaletteColor = __webpack_require__(161);
+var Rle = __webpack_require__(162);
 
 /**
  * Dicom parser is a combination of utilities to get a VJS image from dicom files.
@@ -56899,8 +56906,16 @@ var ParsersDicom = function (_ParsersVolume) {
     // throw error if any!
     _this._dataSet = null;
 
+    //PALETTE COLOR TABLE Descriptors
+    _this.palette_color_tables = {
+      redPaletteColorLookupTableDescriptor: null,
+      greenPaletteColorLookupTableDescriptor: null,
+      bluePaletteColorLookupTableDescriptor: null
+    };
+
     try {
       _this._dataSet = DicomParser.parseDicom(byteArray);
+      if (_this.photometricInterpretation() == 'PALETTE COLOR') PaletteColor.populatePaletteColorLut(_this._dataSet, _this.palette_color_tables);
     } catch (e) {
       window.console.log(e);
       var error = new Error('parsers.dicom could not parse the file');
@@ -57597,7 +57612,6 @@ var ParsersDicom = function (_ParsersVolume) {
 
   ParsersDicom.prototype._findStringEverywhere = function _findStringEverywhere(subsequence, tag, index) {
     var targetString = this._findStringInFrameGroupSequence(subsequence, tag, index);
-
     // PET MODULE
     if (targetString === null) {
       var petModule = 'x00540022';
@@ -57627,7 +57641,7 @@ var ParsersDicom = function (_ParsersVolume) {
       targetString = null;
     }
 
-    return null;
+    return targetString;
   };
 
   ParsersDicom.prototype._findFloatStringInGroupSequence = function _findFloatStringInGroupSequence(sequence, subsequence, tag, index) {
@@ -57664,6 +57678,9 @@ var ParsersDicom = function (_ParsersVolume) {
     transferSyntaxUID === '1.2.840.10008.1.2.4.91') {
       // JPEG 2000 Lossy
       return this._decodeJ2K(frameIndex);
+    } else if (transferSyntaxUID === '1.2.840.10008.1.2.5') {
+      // JPEG 2000 Lossy
+      return this._decodeRLELossless(frameIndex);
     } else if (transferSyntaxUID === '1.2.840.10008.1.2.4.57' ||
     // JPEG Lossless, Nonhierarchical (Processes 14)
     transferSyntaxUID === '1.2.840.10008.1.2.4.70') {
@@ -57754,6 +57771,34 @@ var ParsersDicom = function (_ParsersVolume) {
     var byteOutput = bitsAllocated <= 8 ? 1 : 2;
     var decoder = new Jpeg.lossless.Decoder();
     var decompressedData = decoder.decode(encodedPixelData.buffer, encodedPixelData.byteOffset, encodedPixelData.length, byteOutput);
+
+    if (pixelRepresentation === 0) {
+      if (byteOutput === 2) {
+        return new Uint16Array(decompressedData.buffer);
+      } else {
+        // untested!
+        return new Uint8Array(decompressedData.buffer);
+      }
+    } else {
+      return new Int16Array(decompressedData.buffer);
+    }
+  };
+
+  // from cnsimbe
+
+
+  ParsersDicom.prototype._decodeRLELossless = function _decodeRLELossless() {
+    var frameIndex = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+
+    var encodedPixelData = this.getEncapsulatedImageFrame(frameIndex);
+    var pixelRepresentation = this.pixelRepresentation(frameIndex);
+    var bitsAllocated = this.bitsAllocated(frameIndex);
+    var rows = this.rows(frameIndex);
+    var columns = this.columns(frameIndex);
+    var samplesPerPixel = this.samplesPerPixel();
+    var byteOutput = bitsAllocated <= 8 ? 1 : 2;
+    var decoder = new Rle();
+    var decompressedData = decoder.decodeFrame(encodedPixelData, rows, columns, samplesPerPixel, bitsAllocated);
 
     if (pixelRepresentation === 0) {
       if (byteOutput === 2) {
@@ -57938,9 +57983,23 @@ var ParsersDicom = function (_ParsersVolume) {
         rgbData[_rgbaIndex++] = y + 1.77200 * (cb - 128); // blue
         // rgbData[rgbaIndex++] = 255; //alpha
       }
+    } else if (photometricInterpretation === 'PALETTE COLOR') {
+      if (uncompressedData instanceof Int8Array) {
+        rgbData = new Int8Array(uncompressedData.length * 3);
+      } else if (uncompressedData instanceof Uint8Array) {
+        rgbData = new Uint8Array(uncompressedData.length * 3);
+      } else if (uncompressedData instanceof Int16Array) {
+        rgbData = new Int16Array(uncompressedData.length * 3);
+      } else if (uncompressedData instanceof Uint16Array) {
+        rgbData = new Uint16Array(uncompressedData.length * 3);
+      } else {
+        var _error3 = new Error('unsuported typed array: ' + uncompressedData);
+        throw _error3;
+      }
+      PaletteColor.palette_color_to_rgb(uncompressedData, this.rows(), this.columns(), this.palette_color_tables, rgbData);
     } else {
-      var _error3 = new Error('photometric interpolation not supported: ' + photometricInterpretation);
-      throw _error3;
+      var _error4 = new Error('photometric interpolation not supported: ' + photometricInterpretation);
+      throw _error4;
     }
 
     return rgbData;
@@ -62124,7 +62183,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /** * Imports ***/
 
 
-var NiftiReader = __webpack_require__(162);
+var NiftiReader = __webpack_require__(164);
 /**
  * @module parsers/nifti
  */
@@ -63420,7 +63479,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 
 var pako = __webpack_require__(19);
-var NrrdReader = __webpack_require__(164);
+var NrrdReader = __webpack_require__(166);
 /**
  * @module parsers/nifti
  */
@@ -64343,19 +64402,19 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "VolumeRenderingHelperFactory", function() { return __WEBPACK_IMPORTED_MODULE_4__helpers_helpers__["l"]; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__loaders_loaders__ = __webpack_require__(112);
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "VolumeLoader", function() { return __WEBPACK_IMPORTED_MODULE_5__loaders_loaders__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__models_models__ = __webpack_require__(165);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__models_models__ = __webpack_require__(167);
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "FrameModel", function() { return __WEBPACK_IMPORTED_MODULE_6__models_models__["a"]; });
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "StackModel", function() { return __WEBPACK_IMPORTED_MODULE_6__models_models__["c"]; });
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "SeriesModel", function() { return __WEBPACK_IMPORTED_MODULE_6__models_models__["b"]; });
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "VoxelModel", function() { return __WEBPACK_IMPORTED_MODULE_6__models_models__["d"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__parsers_parsers__ = __webpack_require__(166);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__parsers_parsers__ = __webpack_require__(168);
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "DicomParser", function() { return __WEBPACK_IMPORTED_MODULE_7__parsers_parsers__["a"]; });
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "MghParser", function() { return __WEBPACK_IMPORTED_MODULE_7__parsers_parsers__["b"]; });
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "NiftiParser", function() { return __WEBPACK_IMPORTED_MODULE_7__parsers_parsers__["c"]; });
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "NrrdParser", function() { return __WEBPACK_IMPORTED_MODULE_7__parsers_parsers__["d"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__presets_presets__ = __webpack_require__(167);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__presets_presets__ = __webpack_require__(169);
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "SegmentationPreset", function() { return __WEBPACK_IMPORTED_MODULE_8__presets_presets__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__shaders_shaders__ = __webpack_require__(170);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__shaders_shaders__ = __webpack_require__(172);
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "ContourUniformShader", function() { return __WEBPACK_IMPORTED_MODULE_9__shaders_shaders__["b"]; });
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "ContourFragmentShader", function() { return __WEBPACK_IMPORTED_MODULE_9__shaders_shaders__["a"]; });
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "ContourVertexShader", function() { return __WEBPACK_IMPORTED_MODULE_9__shaders_shaders__["c"]; });
@@ -64371,7 +64430,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "LocalizerUniformShader", function() { return __WEBPACK_IMPORTED_MODULE_9__shaders_shaders__["k"]; });
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "LocalizerFragmentShader", function() { return __WEBPACK_IMPORTED_MODULE_9__shaders_shaders__["j"]; });
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "LocalizerVertexShader", function() { return __WEBPACK_IMPORTED_MODULE_9__shaders_shaders__["l"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__widgets_widgets__ = __webpack_require__(174);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__widgets_widgets__ = __webpack_require__(176);
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "WidgetsCss", function() { return __WEBPACK_IMPORTED_MODULE_10__widgets_widgets__["l"]; });
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "AngleWidget", function() { return __WEBPACK_IMPORTED_MODULE_10__widgets_widgets__["a"]; });
 /* harmony namespace reexport (by provided) */ __webpack_require__.d(__webpack_exports__, "AnnotationWidget", function() { return __WEBPACK_IMPORTED_MODULE_10__widgets_widgets__["b"]; });
@@ -64396,7 +64455,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 
-var pckg = __webpack_require__(185);
+var pckg = __webpack_require__(187);
 window.console.log('ami v' + pckg.version + ' (three v' + pckg.config.threeVersion + ')');
 
 /***/ }),
@@ -70115,7 +70174,7 @@ var IntersectBox = function (_ShadersBase) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__models_models_stack__ = __webpack_require__(56);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__models_models_frame__ = __webpack_require__(59);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__parsers_parsers_dicom__ = __webpack_require__(60);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__parsers_parsers_mhd__ = __webpack_require__(161);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__parsers_parsers_mhd__ = __webpack_require__(163);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__parsers_parsers_nifti__ = __webpack_require__(78);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__parsers_parsers_nrrd__ = __webpack_require__(80);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__parsers_parsers_mgh__ = __webpack_require__(81);
@@ -93191,6 +93250,298 @@ function loadJpegStream(id, imageUrl, objs) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony export (immutable) */ __webpack_exports__["getLutDescriptor"] = getLutDescriptor;
+/* harmony export (immutable) */ __webpack_exports__["getLutData"] = getLutData;
+/* harmony export (immutable) */ __webpack_exports__["populatePaletteColorLut"] = populatePaletteColorLut;
+/* harmony export (immutable) */ __webpack_exports__["convertLUTto8Bit"] = convertLUTto8Bit;
+/* harmony export (immutable) */ __webpack_exports__["palette_color_to_rgb"] = palette_color_to_rgb;
+
+//Taken from 
+//https://github.com/cornerstonejs/cornerstoneWADOImageLoader/blob/master/src/imageLoader/wadouri/metaData/getImagePixelModule.js
+
+function getLutDescriptor (dataSet, tag) {
+  if (!dataSet.elements[tag] || dataSet.elements[tag].length !== 6) {
+    return;
+  }
+
+  return [dataSet.uint16(tag, 0), dataSet.uint16(tag, 1), dataSet.uint16(tag, 2)];
+}
+
+function getLutData (lutDataSet, tag, lutDescriptor) {
+  const lut = [];
+  const lutData = lutDataSet.elements[tag];
+
+  for (let i = 0; i < lutDescriptor[0]; i++) {
+    // Output range is always unsigned
+    if (lutDescriptor[2] === 16) {
+      lut[i] = lutDataSet.uint16(tag, i);
+    } else {
+      lut[i] = lutDataSet.byteArray[i + lutData.dataOffset];
+    }
+  }
+
+  return lut;
+}
+
+function populatePaletteColorLut (dataSet, imagePixelModule) {
+  imagePixelModule.redPaletteColorLookupTableDescriptor = getLutDescriptor(dataSet, 'x00281101');
+  imagePixelModule.greenPaletteColorLookupTableDescriptor = getLutDescriptor(dataSet, 'x00281102');
+  imagePixelModule.bluePaletteColorLookupTableDescriptor = getLutDescriptor(dataSet, 'x00281103');
+
+  // The first Palette Color Lookup Table Descriptor value is the number of entries in the lookup table.
+  // When the number of table entries is equal to 2ˆ16 then this value shall be 0.
+  // See http://dicom.nema.org/MEDICAL/DICOM/current/output/chtml/part03/sect_C.7.6.3.html#sect_C.7.6.3.1.5
+  if (imagePixelModule.redPaletteColorLookupTableDescriptor[0] === 0) {
+    imagePixelModule.redPaletteColorLookupTableDescriptor[0] = 65536;
+    imagePixelModule.greenPaletteColorLookupTableDescriptor[0] = 65536;
+    imagePixelModule.bluePaletteColorLookupTableDescriptor[0] = 65536;
+  }
+
+  // The third Palette Color Lookup Table Descriptor value specifies the number of bits for each entry in the Lookup Table Data.
+  // It shall take the value of 8 or 16.
+  // The LUT Data shall be stored in a format equivalent to 8 bits allocated when the number of bits for each entry is 8, and 16 bits allocated when the number of bits for each entry is 16, where in both cases the high bit is equal to bits allocated-1.
+  // The third value shall be identical for each of the Red, Green and Blue Palette Color Lookup Table Descriptors.
+  //
+  // Note: Some implementations have encoded 8 bit entries with 16 bits allocated, padding the high bits;
+  // this can be detected by comparing the number of entries specified in the LUT Descriptor with the actual value length of the LUT Data entry.
+  // The value length in bytes should equal the number of entries if bits allocated is 8, and be twice as long if bits allocated is 16.
+  const numLutEntries = imagePixelModule.redPaletteColorLookupTableDescriptor[0];
+  const lutData = dataSet.elements.x00281201;
+  const lutBitsAllocated = lutData.length === numLutEntries ? 8 : 16;
+
+  // If the descriptors do not appear to have the correct values, correct them
+  if (imagePixelModule.redPaletteColorLookupTableDescriptor[2] !== lutBitsAllocated) {
+    imagePixelModule.redPaletteColorLookupTableDescriptor[2] = lutBitsAllocated;
+    imagePixelModule.greenPaletteColorLookupTableDescriptor[2] = lutBitsAllocated;
+    imagePixelModule.bluePaletteColorLookupTableDescriptor[2] = lutBitsAllocated;
+  }
+
+  imagePixelModule.redPaletteColorLookupTableData = getLutData(dataSet, 'x00281201', imagePixelModule.redPaletteColorLookupTableDescriptor);
+  imagePixelModule.greenPaletteColorLookupTableData = getLutData(dataSet, 'x00281202', imagePixelModule.greenPaletteColorLookupTableDescriptor);
+  imagePixelModule.bluePaletteColorLookupTableData = getLutData(dataSet, 'x00281203', imagePixelModule.bluePaletteColorLookupTableDescriptor);
+}
+
+
+
+
+
+
+//Got from
+//https://github.com/cornerstonejs/cornerstoneWADOImageLoader/blob/master/src/imageLoader/colorSpaceConverters/convertPALETTECOLOR.js
+
+
+/* eslint no-bitwise: 0 */
+
+function convertLUTto8Bit (lut, shift) {
+  const numEntries = lut.length;
+  const cleanedLUT = new Uint8ClampedArray(numEntries);
+
+  for (let i = 0; i < numEntries; ++i) {
+    cleanedLUT[i] = lut[i] >> shift;
+  }
+
+  return cleanedLUT;
+}
+
+/**
+ * Convert pixel data with PALETTE COLOR Photometric Interpretation to RGB
+ * @returns {void}
+ */
+function palette_color_to_rgb(pixelData, rows, columns, lookUpTables , rgbBuffer) {
+  const numPixels = columns * rows;
+  const rData = lookUpTables.redPaletteColorLookupTableData;
+  const gData = lookUpTables.greenPaletteColorLookupTableData;
+  const bData = lookUpTables.bluePaletteColorLookupTableData;
+  const len = rData.length;
+  let palIndex = 0;
+  let rgbIndex = 0;
+
+  const start = lookUpTables.redPaletteColorLookupTableDescriptor[1];
+  const shift = lookUpTables.redPaletteColorLookupTableDescriptor[2] === 8 ? 0 : 8;
+
+  const rDataCleaned = convertLUTto8Bit(rData, shift);
+  const gDataCleaned = convertLUTto8Bit(gData, shift);
+  const bDataCleaned = convertLUTto8Bit(bData, shift);
+
+  for (let i = 0; i < numPixels; ++i) {
+    let value = pixelData[palIndex++];
+
+    if (value < start) {
+      value = 0;
+    } else if (value > start + len - 1) {
+      value = len - 1;
+    } else {
+      value -= start;
+    }
+
+    rgbBuffer[rgbIndex++] = rDataCleaned[value];
+    rgbBuffer[rgbIndex++] = gDataCleaned[value];
+    rgbBuffer[rgbIndex++] = bDataCleaned[value];
+  }
+}
+
+
+/***/ }),
+/* 162 */
+/***/ (function(module, exports) {
+
+//Taken from
+//https://github.com/pydicom/pydicom/blob/master/pydicom/pixel_data_handlers/rle_handler.py
+
+class Decoder {
+
+    /*
+
+    """Decodes a single frame of RLE encoded data.
+    Reads the plane information at the beginning of the data.
+    If more than pixel size > 1 byte appropriately interleaves the data from
+    the high and low planes. Data is always stored big endian. Output always
+    little endian
+
+    Parameters
+    ----------
+    data: bytes
+        The RLE frame data
+    rows: int
+        The number of output rows
+    columns: int
+        The number of output columns
+    samples_per_pixel: int
+        Number of samples per pixel (e.g. 3 for RGB data).
+    bits_allocated: int
+        Number of bits per sample - must be a multiple of 8
+
+    Returns
+    -------
+    bytearray
+        The decompressed data
+    """
+
+
+    Data is off type TypedArray
+
+    */
+    decodeFrame(data, rows, columns, samples_per_pixel, bits_allocated) {
+        let rle_start = 0
+        let rle_len = data.length
+
+        let number_of_planes = new DataView(data.slice(rle_start, rle_start + 4).reverse().buffer).getUint32()
+
+        if(bits_allocated % 8 != 0)
+            throw("Don't know how to handle BitsAllocated not being a multiple of bytes")
+
+        let bytes_allocated = Math.floor(bits_allocated / 8)
+
+        let expected_number_of_planes = samples_per_pixel * bytes_allocated
+
+        if (number_of_planes != expected_number_of_planes)
+            throw("Unexpected number of planes")
+
+        let plane_start_list = []
+        for(let i = 0; i < number_of_planes; i++)
+        {
+            let header_offset_start = rle_start + 4 + (4 * i)
+            let header_offset_end = rle_start + 4 + (4 * (i + 1))
+            let plane_start_in_rle = new DataView(data.slice(header_offset_start, header_offset_end).reverse().buffer).getUint32() // noqa
+            plane_start_list.push(plane_start_in_rle + rle_start)
+        }
+            
+
+        let plane_end_list = plane_start_list.slice(1)
+        plane_end_list.push(rle_len + rle_start)
+
+        let frame_bytes = new Uint8Array(rows * columns * samples_per_pixel * bytes_allocated)  // noqa
+
+        for (let sample_number = 0; sample_number < samples_per_pixel; sample_number++)
+            for (let byte_number =0; byte_number < bytes_allocated; byte_number++)
+            {
+                let plane_number = byte_number + (sample_number * bytes_allocated)
+                let out_plane_number = ((sample_number + 1) * bytes_allocated) - byte_number - 1  // noqa
+                let plane_start = plane_start_list[plane_number]
+                let plane_end = plane_end_list[plane_number]
+
+                let plane_bytes = this._rle_decode_plane(data.slice(plane_start,plane_end))
+
+                if (plane_bytes.length != (rows * columns))
+                    throw("Different number of bytes unpacked from RLE than expected")
+
+                let increment = samples_per_pixel * bytes_allocated;
+                for(let k = out_plane_number,m = 0; k < frame_bytes.length;k+=increment,m++)
+                    frame_bytes[k] = plane_bytes[m]  // noqa
+            }
+                
+
+        return frame_bytes
+    }
+
+
+    _rle_decode_plane(data) {
+    /*
+    Return a single plane of decoded RLE data.
+
+    Parameters
+    ----------
+    data : bytes
+        The data to be decompressed.
+
+    Returns
+    -------
+    bytearray
+        The decompressed data.
+    */
+
+        let result = []
+        let pos = 0
+        let len_data = data.length
+
+        while (pos < len_data)
+        {
+            let header_byte = data[pos]
+            pos += 1
+            if (header_byte > 128)
+            {
+                // Extend by copying the next byte (-N + 1) times
+                // however since using uint8 instead of int8 this will be
+                // (256 - N + 1) times
+                let copyTimes = (257 - header_byte);
+                let dataCopy = data.slice(pos,pos+1) 
+                for(let i = 0; i< copyTimes;i++)
+                    for(let j = 0; j < dataCopy.length;j++)
+                        result.push(dataCopy[j])
+                pos += 1
+                continue
+            }
+                
+
+            if (header_byte < 128)
+            {
+                //Extend by literally copying the next (N + 1) bytes
+                let dataCopy = data.slice(pos,pos + header_byte + 1)
+                for(let j = 0; j < dataCopy.length;j++)
+                    result.push(dataCopy[j])
+
+                pos += header_byte + 1
+            }
+        }
+
+        return result
+    }
+}
+
+/*** Exports ***/
+var moduleType = typeof module;
+if ((moduleType !== 'undefined') && module.exports) {
+    module.exports = Decoder;
+}
+
+var RLEDecoder = RLEDecoder || Decoder
+
+/***/ }),
+/* 163 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__parsers_volume__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_three__ = __webpack_require__(1);
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -93396,7 +93747,7 @@ var ParsersMHD = function (_ParsersVolume) {
 /* harmony default export */ __webpack_exports__["a"] = (ParsersMHD);
 
 /***/ }),
-/* 162 */
+/* 164 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -93414,7 +93765,7 @@ var ParsersMHD = function (_ParsersVolume) {
  */
 var nifti = nifti || {};
 nifti.NIFTI1 = nifti.NIFTI1 || (( true) ? __webpack_require__(79) : null);
-nifti.NIFTI2 = nifti.NIFTI2 || (( true) ? __webpack_require__(163) : null);
+nifti.NIFTI2 = nifti.NIFTI2 || (( true) ? __webpack_require__(165) : null);
 nifti.Utils = nifti.Utils || (( true) ? __webpack_require__(27) : null);
 
 var pako = pako || (( true) ? __webpack_require__(19) : null);
@@ -93613,7 +93964,7 @@ if ((moduleType !== 'undefined') && module.exports) {
 
 
 /***/ }),
-/* 163 */
+/* 165 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -94016,7 +94367,7 @@ if ((moduleType !== 'undefined') && module.exports) {
 
 
 /***/ }),
-/* 164 */
+/* 166 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -95269,7 +95620,7 @@ function serializeToTextBuffer(data) {
 
 
 /***/ }),
-/* 165 */
+/* 167 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -95289,7 +95640,7 @@ function serializeToTextBuffer(data) {
 
 
 /***/ }),
-/* 166 */
+/* 168 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -95309,21 +95660,21 @@ function serializeToTextBuffer(data) {
 
 
 /***/ }),
-/* 167 */
+/* 169 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__presets_segmentation__ = __webpack_require__(168);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__presets_segmentation__ = __webpack_require__(170);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return __WEBPACK_IMPORTED_MODULE_0__presets_segmentation__["a"]; });
 
 
 
 /***/ }),
-/* 168 */
+/* 170 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__presets_segmentation_freesurfer__ = __webpack_require__(169);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__presets_segmentation_freesurfer__ = __webpack_require__(171);
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -95388,7 +95739,7 @@ var PresetsSegmentation = function () {
 /* harmony default export */ __webpack_exports__["a"] = (PresetsSegmentation);
 
 /***/ }),
-/* 169 */
+/* 171 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -96690,7 +97041,7 @@ var segmentationFs = {
 /* harmony default export */ __webpack_exports__["a"] = (segmentationFs);
 
 /***/ }),
-/* 170 */
+/* 172 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -96703,9 +97054,9 @@ var segmentationFs = {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__shaders_vr_uniform__ = __webpack_require__(47);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__shaders_vr_fragment__ = __webpack_require__(49);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__shaders_vr_vertex__ = __webpack_require__(48);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__shaders_layer_uniform__ = __webpack_require__(171);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__shaders_layer_fragment__ = __webpack_require__(172);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__shaders_layer_vertex__ = __webpack_require__(173);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__shaders_layer_uniform__ = __webpack_require__(173);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__shaders_layer_fragment__ = __webpack_require__(174);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__shaders_layer_vertex__ = __webpack_require__(175);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__shaders_localizer_uniform__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__shaders_localizer_fragment__ = __webpack_require__(38);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__shaders_localizer_vertex__ = __webpack_require__(37);
@@ -96747,7 +97098,7 @@ var segmentationFs = {
 
 
 /***/ }),
-/* 171 */
+/* 173 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -96816,7 +97167,7 @@ var ShadersUniform = function () {
 /* harmony default export */ __webpack_exports__["a"] = (ShadersUniform);
 
 /***/ }),
-/* 172 */
+/* 174 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -96881,7 +97232,7 @@ var ShadersFragment = function () {
 /* harmony default export */ __webpack_exports__["a"] = (ShadersFragment);
 
 /***/ }),
-/* 173 */
+/* 175 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -96902,22 +97253,22 @@ var ShadersVertex = function () {
 /* harmony default export */ __webpack_exports__["a"] = (ShadersVertex);
 
 /***/ }),
-/* 174 */
+/* 176 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__widgets_css__ = __webpack_require__(83);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__widgets_angle__ = __webpack_require__(175);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__widgets_annotation__ = __webpack_require__(176);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__widgets_biruler__ = __webpack_require__(177);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__widgets_crossRuler__ = __webpack_require__(178);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__widgets_ellipse__ = __webpack_require__(179);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__widgets_freehand__ = __webpack_require__(180);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__widgets_angle__ = __webpack_require__(177);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__widgets_annotation__ = __webpack_require__(178);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__widgets_biruler__ = __webpack_require__(179);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__widgets_crossRuler__ = __webpack_require__(180);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__widgets_ellipse__ = __webpack_require__(181);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__widgets_freehand__ = __webpack_require__(182);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__widgets_handle__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__widgets_polygon__ = __webpack_require__(181);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__widgets_rectangle__ = __webpack_require__(182);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__widgets_ruler__ = __webpack_require__(183);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__widgets_voxelProbe__ = __webpack_require__(184);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__widgets_polygon__ = __webpack_require__(183);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__widgets_rectangle__ = __webpack_require__(184);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__widgets_ruler__ = __webpack_require__(185);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__widgets_voxelProbe__ = __webpack_require__(186);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "l", function() { return __WEBPACK_IMPORTED_MODULE_0__widgets_css__["a"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return __WEBPACK_IMPORTED_MODULE_1__widgets_angle__["a"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return __WEBPACK_IMPORTED_MODULE_2__widgets_annotation__["a"]; });
@@ -96947,7 +97298,7 @@ var ShadersVertex = function () {
 
 
 /***/ }),
-/* 175 */
+/* 177 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -97385,7 +97736,7 @@ var widgetsAngle = function widgetsAngle() {
 /* harmony default export */ __webpack_exports__["a"] = (widgetsAngle());
 
 /***/ }),
-/* 176 */
+/* 178 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -97820,7 +98171,7 @@ var widgetsAnnotation = function widgetsAnnotation() {
 /* harmony default export */ __webpack_exports__["a"] = (widgetsAnnotation());
 
 /***/ }),
-/* 177 */
+/* 179 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -98258,7 +98609,7 @@ var widgetsBiruler = function widgetsBiruler() {
 /* harmony default export */ __webpack_exports__["a"] = (widgetsBiruler());
 
 /***/ }),
-/* 178 */
+/* 180 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -98788,7 +99139,7 @@ var widgetsCrossRuler = function widgetsCrossRuler() {
 /* harmony default export */ __webpack_exports__["a"] = (widgetsCrossRuler());
 
 /***/ }),
-/* 179 */
+/* 181 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -99228,7 +99579,7 @@ var widgetsEllipse = function widgetsEllipse() {
 /* harmony default export */ __webpack_exports__["a"] = (widgetsEllipse());
 
 /***/ }),
-/* 180 */
+/* 182 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -99821,7 +100172,7 @@ var widgetsFreehand = function widgetsFreehand() {
 /* harmony default export */ __webpack_exports__["a"] = (widgetsFreehand());
 
 /***/ }),
-/* 181 */
+/* 183 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -100403,7 +100754,7 @@ var widgetsPolygon = function widgetsPolygon() {
 /* harmony default export */ __webpack_exports__["a"] = (widgetsPolygon());
 
 /***/ }),
-/* 182 */
+/* 184 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -100814,7 +101165,7 @@ var widgetsRectangle = function widgetsRectangle() {
 /* harmony default export */ __webpack_exports__["a"] = (widgetsRectangle());
 
 /***/ }),
-/* 183 */
+/* 185 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -101182,7 +101533,7 @@ var widgetsRuler = function widgetsRuler() {
 /* harmony default export */ __webpack_exports__["a"] = (widgetsRuler());
 
 /***/ }),
-/* 184 */
+/* 186 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -101508,10 +101859,10 @@ var widgetsVoxelprobe = function widgetsVoxelprobe() {
 /* harmony default export */ __webpack_exports__["a"] = (widgetsVoxelprobe());
 
 /***/ }),
-/* 185 */
+/* 187 */
 /***/ (function(module, exports) {
 
-module.exports = {"name":"ami.js","version":"0.0.23-dev","main":"build/ami.js","keywords":["ami","ami.js","three.js","webgl","dicom","nifti","awesome","medical","imaging","xtk","nrrd","vtk","stl","trk"],"author":{"name":"Nicolas Rannou","email":"nicolas@eunate.ch","url":"https://eunate.ch"},"license":"Apache-2.0","repository":{"type":"git","url":"https://fnndsc.github.io/ami"},"config":{"threeVersion":"93","amiCDN":"https://cdnjs.cloudflare.com/ajax/libs/ami.js","gaKey":"UA-39303022-3","babel":"--module-bind js=babel-loader --colors --display-error-details"},"dependencies":{"dicom-parser":"1.7.3","image-JPEG2000":"OHIF/image-JPEG2000#master","jpeg-lossless-decoder-js":"1.2.3","math-float32-to-binary-string":"^1.0.0","nifti-reader-js":"v0.5.3","nrrd-js":"^0.2.1","pako":"1.0.1","three":"0.92.0"},"scripts":{"build:ami":"webpack --config webpack.config.build.js","build:ami:prod":"cross-env NODE_ENV=production yarn build:ami","build:clean":"rimraf -rf build/*","build:clean:hot":"rimraf -rf build/*.hot-update.*","dev:ami":"webpack --config webpack.config.build.js --hot --watch --colors","dist:ami":"yarn build:clean && yarn build:ami && yarn build:ami:prod && yarn doc","dist:examples":"node ./scripts/buildDist.js && node ./scripts/router.js examples deploy","dist:clean":"rimraf -rf dist/*","analyze:ami":"cross-env NODE_WEBPACK_ANALYZE=true yarn build:ami","analyze:ami:prod":"cross-env NODE_WEBPACK_ANALYZE=true yarn build:ami:prod","clean":"yarn build:clean && yarn dist:clean","example":"node ./scripts/router.js examples","lesson":"node ./scripts/router.js lessons","gen:index:examples":"node ./scripts/genIndexFiles.js examples","gen:index:examples:ga":"cross-env NODE_GA=true node ./scripts/genIndexFiles.js examples","gen:index:lessons":"node ./scripts/genIndexFiles.js lessons","gen:index:lessons:cdn":"node ./scripts/genIndexFiles.js lessons cdn","test":"karma start","testExamples":"yarn dist:clean && yarn dist:examples && echo 'hi'","lint":"eslint src/**/*.js","doc":"jsdoc -p -r -R README.md -c jsdoc.json -d dist/doc src","ami":"yarn lint && yarn dist:ami && yarn test","deploy":"yarn dist:clean && yarn build:clean && yarn dist:ami && yarn dist:examples && gh-pages -d dist"},"devDependencies":{"babel-cli":"latest","babel-core":"^6.26.0","babel-loader":"^7.1.2","babel-preset-env":"^1.6.0","babel-runtime":"^6.26.0","compression-webpack-plugin":"^1.0.1","cross-env":"^3.2.3","eslint":"latest","eslint-config-google":"latest","gh-pages":"latest","glslify":"5.1.0","jasmine-core":"latest","jsdoc":"jsdoc3/jsdoc#master","karma":"^2.0.2","karma-chrome-launcher":"^2.2.0","karma-jasmine":"latest","karma-sinon":"^1.0.5","karma-spec-reporter":"latest","karma-webpack":"^2.0.4","live-server":"^1.1.0","node-pre-gyp":"^0.10.0","puppeteer":"^0.13.0","rimraf":"^2.6.1","rollup-plugin-node-builtins":"^2.1.2","shelljs":"latest","sinon":"^2.0.0","uglifyjs-webpack-plugin":"^1.0.0-beta.3","webpack":"^3.7.1","webpack-bundle-analyzer":"^2.9.0","webpack-dev-server":"^2.9.1","webpack-watch-livereload-plugin":"^0.0.1"},"engines":{"node":">=6.9.0"}}
+module.exports = {"name":"ami.js","version":"0.0.23-dev","main":"build/ami.js","keywords":["ami","ami.js","three.js","webgl","dicom","nifti","awesome","medical","imaging","xtk","nrrd","vtk","stl","trk"],"author":{"name":"Nicolas Rannou","email":"nicolas@eunate.ch","url":"https://eunate.ch"},"license":"Apache-2.0","repository":{"type":"git","url":"https://fnndsc.github.io/ami"},"config":{"threeVersion":"93","amiCDN":"https://cdnjs.cloudflare.com/ajax/libs/ami.js","gaKey":"UA-39303022-3","babel":"--module-bind js=babel-loader --colors --display-error-details"},"dependencies":{"dicom-parser":"1.7.3","image-JPEG2000":"OHIF/image-JPEG2000#master","jpeg-lossless-decoder-js":"1.2.3","math-float32-to-binary-string":"^1.0.0","nifti-reader-js":"v0.5.3","nrrd-js":"^0.2.1","pako":"1.0.1","rle-dicom":"https://github.com/cnsimbe/rle-dicom","three":"0.92.0"},"scripts":{"build:ami":"webpack --config webpack.config.build.js","build:ami:prod":"cross-env NODE_ENV=production yarn build:ami","build:clean":"rimraf -rf build/*","build:clean:hot":"rimraf -rf build/*.hot-update.*","dev:ami":"webpack --config webpack.config.build.js --hot --watch --colors","dist:ami":"yarn build:clean && yarn build:ami && yarn build:ami:prod && yarn doc","dist:examples":"node ./scripts/buildDist.js && node ./scripts/router.js examples deploy","dist:clean":"rimraf -rf dist/*","analyze:ami":"cross-env NODE_WEBPACK_ANALYZE=true yarn build:ami","analyze:ami:prod":"cross-env NODE_WEBPACK_ANALYZE=true yarn build:ami:prod","clean":"yarn build:clean && yarn dist:clean","example":"node ./scripts/router.js examples","lesson":"node ./scripts/router.js lessons","gen:index:examples":"node ./scripts/genIndexFiles.js examples","gen:index:examples:ga":"cross-env NODE_GA=true node ./scripts/genIndexFiles.js examples","gen:index:lessons":"node ./scripts/genIndexFiles.js lessons","gen:index:lessons:cdn":"node ./scripts/genIndexFiles.js lessons cdn","test":"karma start","testExamples":"yarn dist:clean && yarn dist:examples && echo 'hi'","lint":"eslint src/**/*.js","doc":"jsdoc -p -r -R README.md -c jsdoc.json -d dist/doc src","ami":"yarn lint && yarn dist:ami && yarn test","deploy":"yarn dist:clean && yarn build:clean && yarn dist:ami && yarn dist:examples && gh-pages -d dist"},"devDependencies":{"babel-cli":"latest","babel-core":"^6.26.0","babel-loader":"^7.1.2","babel-preset-env":"^1.6.0","babel-runtime":"^6.26.0","compression-webpack-plugin":"^1.0.1","cross-env":"^3.2.3","eslint":"latest","eslint-config-google":"latest","gh-pages":"latest","glslify":"5.1.0","jasmine-core":"latest","jsdoc":"jsdoc3/jsdoc#master","karma":"^2.0.2","karma-chrome-launcher":"^2.2.0","karma-jasmine":"latest","karma-sinon":"^1.0.5","karma-spec-reporter":"latest","karma-webpack":"^2.0.4","live-server":"^1.1.0","node-pre-gyp":"^0.10.0","puppeteer":"^0.13.0","rimraf":"^2.6.1","rollup-plugin-node-builtins":"^2.1.2","shelljs":"latest","sinon":"^2.0.0","uglifyjs-webpack-plugin":"^1.0.0-beta.3","webpack":"^3.7.1","webpack-bundle-analyzer":"^2.9.0","webpack-dev-server":"^2.9.1","webpack-watch-livereload-plugin":"^0.0.1"},"engines":{"node":">=6.9.0"}}
 
 /***/ })
 /******/ ]);
